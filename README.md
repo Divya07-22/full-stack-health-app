@@ -2,9 +2,18 @@
 
 This is a full-stack web application that predicts the risk of chronic diseases like diabetes, heart disease, and cancer. The frontend is built with React, and the backend is a Python Flask server that uses pre-trained machine learning models to make predictions.
 
-## Screenshot 📸
+## Screenshots 📸
 
-![Chronic Disease Predictor Screenshot](https://i.ibb.co/9g0y1fP/Screenshot-2024-05-23-at-12-44-15-PM.png)
+![Chronic Disease Predictor Welcome Screen](https://i.ibb.co/yYyY0Yg/Screenshot-2025-08-03-152932.png)
+
+![Chronic Disease Predictor Results Screen](https://i.ibb.co/9g0y1fP/Screenshot-2024-05-23-at-12-44-15-PM.png)
+
+## Deployment 🚀
+
+The application is deployed and live. You can access it here:
+
+* **Frontend (Netlify):** [https://spectacular-faun-929149.netlify.app/](https://spectacular-faun-929149.netlify.app/)
+* **Backend (Render):** [https://health-predictor-backend.onrender.com/](https://health-predictor-backend.onrender.com/)
 
 ## Features ✨
 
