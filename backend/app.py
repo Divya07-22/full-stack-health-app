@@ -1,4 +1,4 @@
-# app.py (Cloud Training Version)
+# app.py (Final Production Version with explicit CORS)
 
 import os
 import pickle
@@ -7,8 +7,16 @@ from flask_cors import CORS
 import pandas as pd
 import numpy as np
 
-# --- New Logic: Train Models on the Server if They Don't Exist ---
-# This code runs once when the server starts up.
+# --- Initialize Flask App ---
+app = Flask(__name__)
+
+# --- Configure CORS ---
+# This is the crucial change. We are explicitly allowing all origins
+# to make requests to our /predict endpoint.
+CORS(app, resources={r"/predict": {"origins": "*"}})
+
+
+# --- Train Models on the Server if They Don't Exist ---
 def train_models_if_needed():
     """
     Checks for the existence of .pkl files. If not found, it runs the
@@ -23,11 +31,9 @@ def train_models_if_needed():
     for model_file, script_file in training_map.items():
         if not os.path.exists(model_file):
             print(f"'{model_file}' not found. Running training script: {script_file}")
-            # We use os.system to execute the training script from the command line
             result = os.system(f"python {script_file}")
             if result != 0:
                 print(f"!!! Error running {script_file}. Deployment will fail.")
-                # Exit if a training script fails
                 exit(1)
             print(f"Successfully ran {script_file}.")
         else:
@@ -39,10 +45,7 @@ train_models_if_needed()
 print("--- Model check/training complete ---")
 
 
-# --- Initialize Flask App and Load Models (Same as before) ---
-app = Flask(__name__)
-CORS(app)
-
+# --- Load Models into Memory ---
 print("Loading models into memory...")
 try:
     with open('diabetes_model.pkl', 'rb') as f:
@@ -62,11 +65,10 @@ except FileNotFoundError as e:
 print("All models loaded successfully.")
 
 
-# --- Prediction Endpoint (Same as before) ---
+# --- Prediction Endpoint ---
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.get_json()
-    # ... (The rest of your prediction logic is the same) ...
     # --- 1. Diabetes Prediction ---
     diabetes_features = pd.DataFrame({
         'Pregnancies': [0], 'Glucose': [float(data.get('glucose', 0))], 'BloodPressure': [float(data.get('bloodPressure', 0))],
