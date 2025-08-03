@@ -100,5 +100,6 @@ def predict():
     })
 
 if __name__ == '__main__':
-    print("Starting comprehensive Flask server...")
-    app.run(debug=True, port=5000)
+    # The host must be '0.0.0.0' to be accessible from outside the container
+    # Render automatically provides the port, so we don't need to set it to 10000 here
+    app.run(debug=False, host='0.0.0.0')
