@@ -37,7 +37,7 @@ const App = () => {
 
         try {
             // !!! IMPORTANT: REPLACE THIS URL WITH YOUR LIVE BACKEND URL FROM RENDER !!!
-            const backendUrl = 'https://health-predictor-backend.onrender.com/';
+            const backendUrl = 'https://health-predictor-backend.onrender.com/predict';
             
             const response = await fetch(backendUrl, {
                 method: 'POST',
