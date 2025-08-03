@@ -36,7 +36,7 @@ const App = () => {
         setPrediction(null);
 
         try {
-            // !!! IMPORTANT: REPLACE THIS URL WITH YOUR LIVE BACKEND URL FROM RENDER !!!
+            // !!! This URL has been updated with your live backend URL !!!
             const backendUrl = 'https://health-predictor-backend.onrender.com/predict';
             
             const response = await fetch(backendUrl, {
@@ -81,7 +81,7 @@ const App = () => {
             setPrediction(newPrediction);
 
         } catch (err) {
-            setError('Failed to get a prediction. Is the backend server running?');
+            setError('Failed to get a prediction. Check the browser console for more details.');
             console.error("Fetch error:", err);
         } finally {
             setLoading(false);
