@@ -93,12 +93,27 @@ def predict():
     heart_disease_risk_proba = heart_disease_model.predict_proba(heart_features)[0][1]
     heart_disease_risk = heart_disease_risk_proba * 100
 
-    # --- 3. Cancer Prediction (Simulated) ---
-    cancer_risk_simulated = (1 if data.get('smoking') == 'yes' else 0) * 40 + \
-                            (1 if data.get('alcohol') == 'yes' else 0) * 20 + \
-                            (int(data.get('age', 0)) / 100) * 30 + \
-                            (1 if float(data.get('bmi', 0)) > 30 else 0) * 10
-    cancer_risk = min(cancer_risk_simulated, 95.0)
+    # --- 3. Cancer Prediction (Using Real Model) ---
+    # NOTE: The UI form does not collect the 30 specific features needed for this model.
+    # We are using a set of average, default values for a baseline prediction.
+    # A future improvement would be to create a more detailed form to collect this data.
+    cancer_features_dict = {
+        'radius_mean': 14.1, 'texture_mean': 19.2, 'perimeter_mean': 91.9, 'area_mean': 654.8,
+        'smoothness_mean': 0.096, 'compactness_mean': 0.104, 'concavity_mean': 0.088,
+        'concave points_mean': 0.048, 'symmetry_mean': 0.181, 'fractal_dimension_mean': 0.062,
+        'radius_se': 0.405, 'texture_se': 1.21, 'perimeter_se': 2.86, 'area_se': 40.3,
+        'smoothness_se': 0.007, 'compactness_se': 0.025, 'concavity_se': 0.031,
+        'concave points_se': 0.011, 'symmetry_se': 0.020, 'fractal_dimension_se': 0.003,
+        'radius_worst': 16.2, 'texture_worst': 25.6, 'perimeter_worst': 107.2, 'area_worst': 880.5,
+        'smoothness_worst': 0.132, 'compactness_worst': 0.254, 'concavity_worst': 0.272,
+        'concave points_worst': 0.114, 'symmetry_worst': 0.290, 'fractal_dimension_worst': 0.083
+    }
+    cancer_features = pd.DataFrame([cancer_features_dict])
+    expected_cancer_cols = cancer_model.feature_names_in_
+    cancer_features = cancer_features.reindex(columns=expected_cancer_cols, fill_value=0)
+
+    cancer_risk_proba = cancer_model.predict_proba(cancer_features)[0][1]
+    cancer_risk = cancer_risk_proba * 100
 
     return jsonify({
         'diabetes': { 'risk': diabetes_risk }, 'heartDisease': { 'risk': heart_disease_risk }, 'cancer': { 'risk': cancer_risk }
