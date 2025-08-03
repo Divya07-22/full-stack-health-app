@@ -24,7 +24,6 @@ const App = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // This function calls the comprehensive backend
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -37,7 +36,10 @@ const App = () => {
         setPrediction(null);
 
         try {
-            const response = await fetch('http://127.0.0.1:5000/predict', {
+            // !!! IMPORTANT: REPLACE THIS URL WITH YOUR LIVE BACKEND URL FROM RENDER !!!
+            const backendUrl = 'https://health-predictor-backend.onrender.com/';
+            
+            const response = await fetch(backendUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
