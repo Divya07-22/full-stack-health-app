@@ -1,78 +1,74 @@
-# Chronic Disease Predictor 🩺
+# Full-Stack Chronic Disease Predictor 🩺
 
-This web application helps predict the risk of chronic diseases like diabetes, heart disease, and cancer based on user-provided health data. It provides a risk analysis and personalized recommendations to help users understand and manage their health.
+This is a full-stack web application that predicts the risk of chronic diseases like diabetes, heart disease, and cancer. The frontend is built with React, and the backend is a Python Flask server that uses pre-trained machine learning models to make predictions.
 
-***
+## Screenshot 📸
+
+![Chronic Disease Predictor Screenshot](https://i.ibb.co/9g0y1fP/Screenshot-2024-05-23-at-12-44-15-PM.png)
 
 ## Features ✨
 
-* **Patient Data Form:** A user-friendly form to input health data such as age, gender, BMI, blood pressure, glucose, and cholesterol levels.
+* **Interactive Frontend:** A user-friendly form to input health data.
+* **Machine Learning Backend:** A Python Flask server that uses trained models to predict disease risk.
+* **Multiple Disease Models:** Includes separate models for predicting Diabetes, Heart Disease, and Cancer.
 * **Risk Analysis:** Visual representation of disease risks in a bar chart.
-* **Personalized Recommendations:** Provides personalized health recommendations based on the prediction results for each disease.
-* **Responsive Design:** The application is designed to be accessible and easy to use on various devices, including desktops, tablets, and smartphones.
-
-***
+* **Personalized Recommendations:** Provides health recommendations based on the prediction results.
+* **Responsive Design:** Fully responsive and works on various devices.
 
 ## Technologies Used 💻
 
-* **React:** A JavaScript library for building user interfaces.
-* **Tailwind CSS:** A utility-first CSS framework for rapid UI development.
-* **Recharts:** A composable charting library built on React components.
-* **Create React App:** A tool to bootstrap a single-page React application.
-
-***
+* **Frontend:**
+    * React
+    * Tailwind CSS
+    * Recharts
+* **Backend:**
+    * Python
+    * Flask
+    * Pandas
+    * Scikit-learn
 
 ## Getting Started 🚀
 
-To get a local copy up and running, follow these simple steps.
+To get a local copy up and running, you need to set up both the backend and the frontend.
 
 ### Prerequisites
 
-* **Node.js:** Make sure you have Node.js installed. You can download it from [nodejs.org](https://nodejs.org/).
-* **npm:** npm is distributed with Node.js, which means that when you download Node.js, you automatically get npm installed on your computer.
+* **Node.js & npm:** For the frontend. Download from [nodejs.org](https://nodejs.org/).
+* **Python 3:** For the backend. Download from [python.org](https://www.python.org/).
+* **pip:** Python package installer.
 
-### Installation
+### Backend Setup
 
-1.  **Clone the repo**
+1.  **Navigate to the backend directory:**
     ```sh
-    git clone [https://github.com/nishmith12/chronic-disease-predictor.git](https://github.com/nishmith12/chronic-disease-predictor.git)
+    cd backend
     ```
-2.  **Install NPM packages**
+2.  **Install Python dependencies:**
+    ```sh
+    pip install -r requirements.txt
+    ```
+    *(Note: You may need to create a `requirements.txt` file from the imported libraries in `app.py` if one doesn't exist. The main libraries are `flask`, `pandas`, `scikit-learn`, `flask-cors`)*
+
+3.  **Run the Flask server:**
+    ```sh
+    python app.py
+    ```
+    The backend server will start on `http://127.0.0.1:5000`.
+
+### Frontend Setup
+
+1.  **Navigate to the frontend directory in a new terminal:**
+    ```sh
+    cd frontend
+    ```
+2.  **Install NPM packages:**
     ```sh
     npm install
     ```
+3.  **Run the React app:**
+    ```sh
+    npm start
+    ```
+    The frontend development server will start, usually on [http://localhost:3000](http://localhost:3000).
 
-### Running the App
-
-In the project directory, you can run:
-
-#### `npm start`
-
-Runs the app in the development mode.
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.
-You may also see any lint errors in the console.
-
-#### `npm test`
-
-Launches the test runner in the interactive watch mode.
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-#### `npm run build`
-
-Builds the app for production to the `build` folder.
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-***
-
-## Learn More 📚
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+Once both the backend and frontend servers are running, you can open your browser to `http://localhost:3000` to use the application.
