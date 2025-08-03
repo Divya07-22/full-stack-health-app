@@ -1,4 +1,4 @@
-# train_heart_model.py
+# train_heart_model.py (Corrected for NaN values)
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -18,9 +18,17 @@ except FileNotFoundError:
     exit()
 
 # 2. Prepare the data
-# Convert all columns with object type (text) to numeric using one-hot encoding
-# This is a crucial step for the model to work.
 print("Preprocessing data...")
+# --- NEW STEP: Handle Missing Values ---
+# We will fill any missing numeric values with the median of their column.
+# First, select only numeric columns for median calculation
+numeric_cols = data.select_dtypes(include=['number']).columns
+for col in numeric_cols:
+    median_val = data[col].median()
+    data[col].fillna(median_val, inplace=True)
+print("Missing values handled.")
+
+# Convert all columns with object type (text) to numeric using one-hot encoding
 data_processed = pd.get_dummies(data, drop_first=True)
 
 # The target variable is 'num'. We will convert it to a binary outcome:
