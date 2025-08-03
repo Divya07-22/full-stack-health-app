@@ -16,6 +16,19 @@ app = Flask(__name__)
 CORS(app, resources={r"/predict": {"origins": "*"}})
 
 
+# --- NEW: Root Endpoint ---
+# This endpoint is for checking the server's status.
+@app.route('/', methods=['GET'])
+def index():
+    """
+    A simple endpoint to confirm that the API is live.
+    """
+    return jsonify({
+        "status": "ok",
+        "message": "Chronic Disease Predictor API is running successfully."
+    })
+
+
 # --- Train Models on the Server if They Don't Exist ---
 def train_models_if_needed():
     """
