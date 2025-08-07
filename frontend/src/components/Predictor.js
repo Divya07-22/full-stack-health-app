@@ -1,7 +1,8 @@
-// FILE: frontend/src/components/Predictor.js
+// FILE: frontend/src/components/Predictor.js (Updated)
 
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import Chatbot from './Chatbot'; // Import the new Chatbot component
 
 // This component contains the main prediction UI
 const Predictor = () => {
@@ -45,7 +46,7 @@ const Predictor = () => {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Send the token
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(formData),
             });
@@ -75,36 +76,39 @@ const Predictor = () => {
     };
 
     return (
-        <main className="container mx-auto p-4 md:p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-1">
-                    <PatientDataForm
-                        formData={formData}
-                        handleChange={handleChange}
-                        handleSubmit={handleSubmit}
-                        loading={loading}
-                        error={error}
-                    />
+        <>
+            <main className="container mx-auto p-4 md:p-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-1">
+                        <PatientDataForm
+                            formData={formData}
+                            handleChange={handleChange}
+                            handleSubmit={handleSubmit}
+                            loading={loading}
+                            error={error}
+                        />
+                    </div>
+                    <div className="lg:col-span-2">
+                        {loading && <LoadingSpinner />}
+                        {prediction && !loading && (
+                            <PredictionResults prediction={prediction} />
+                        )}
+                        {!prediction && !loading && <WelcomeMessage />}
+                    </div>
                 </div>
-                <div className="lg:col-span-2">
-                    {loading && <LoadingSpinner />}
-                    {prediction && !loading && (
-                        <PredictionResults prediction={prediction} />
-                    )}
-                    {!prediction && !loading && <WelcomeMessage />}
-                </div>
-            </div>
-        </main>
+            </main>
+            {/* Add the Chatbot component here, pass the latest prediction */}
+            <Chatbot latestPrediction={prediction} />
+        </>
     );
 };
 
-// --- Sub-components for the Predictor page ---
+// --- Sub-components for the Predictor page (These are unchanged) ---
 
 const PatientDataForm = ({ formData, handleChange, handleSubmit, loading, error }) => (
     <div className="bg-white p-6 rounded-lg shadow-lg">
         <h2 className="text-xl font-semibold mb-4 text-gray-700">Enter Patient Health Data</h2>
         <form onSubmit={handleSubmit}>
-            {/* Form fields go here, same as before */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <InputField label="Age" name="age" type="number" value={formData.age} onChange={handleChange} />
                 <SelectField label="Gender" name="gender" value={formData.gender} onChange={handleChange} options={[{value: 'male', label: 'Male'}, {value: 'female', label: 'Female'}]} />
@@ -173,6 +177,3 @@ const PredictionResults = ({ prediction }) => {
 };
 
 export default Predictor;
-
-
-// =================================================================================================
