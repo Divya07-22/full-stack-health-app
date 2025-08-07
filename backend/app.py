@@ -1,46 +1,56 @@
-# app.py (Final Production Version with explicit CORS)
-
 import os
 import pickle
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
 import pandas as pd
 import numpy as np
 
-# --- Initialize Flask App ---
+# --- Initialize App and Extensions ---
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}}) # Allow all origins for all routes
 
-# --- Configure CORS ---
-# This is the crucial change. We are explicitly allowing all origins
-# to make requests to our /predict endpoint.
-CORS(app, resources={r"/predict": {"origins": "*"}})
+# --- Database Configuration ---
+# Get the database URL from the environment variable we set on Render
+db_url = os.environ.get('DATABASE_URL')
+if not db_url:
+    # A fallback for local development if the env var isn't set
+    db_url = 'sqlite:///users.db' 
+    print("Warning: DATABASE_URL not found. Using local SQLite database.")
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# --- JWT Configuration ---
+# A secret key is needed to sign the JWTs
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'super-secret-key-for-dev') # Change this in production
+
+db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
 
 
-# --- NEW: Root Endpoint ---
-# This endpoint is for checking the server's status.
-@app.route('/', methods=['GET'])
-def index():
-    """
-    A simple endpoint to confirm that the API is live.
-    """
-    return jsonify({
-        "status": "ok",
-        "message": "Chronic Disease Predictor API is running successfully."
-    })
+# --- Database Model ---
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(120), nullable=False)
 
+    def __init__(self, email, password):
+        self.email = email
+        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    def check_password(self, password):
+        return bcrypt.check_password_hash(self.password, password)
 
 # --- Train Models on the Server if They Don't Exist ---
 def train_models_if_needed():
-    """
-    Checks for the existence of .pkl files. If not found, it runs the
-    corresponding training script to generate them on the server.
-    """
     training_map = {
         'diabetes_model.pkl': 'train_model.py',
         'heart_disease_model.pkl': 'train_heart_model.py',
         'cancer_model.pkl': 'train_cancer_model.py'
     }
-
     for model_file, script_file in training_map.items():
         if not os.path.exists(model_file):
             print(f"'{model_file}' not found. Running training script: {script_file}")
@@ -49,39 +59,59 @@ def train_models_if_needed():
                 print(f"!!! Error running {script_file}. Deployment will fail.")
                 exit(1)
             print(f"Successfully ran {script_file}.")
-        else:
-            print(f"'{model_file}' already exists. Skipping training.")
 
-# --- Run the Training Check ---
-print("--- Starting Server Initialization ---")
-train_models_if_needed()
-print("--- Model check/training complete ---")
-
+# --- Create DB tables and run training check within app context ---
+with app.app_context():
+    db.create_all()
+    train_models_if_needed()
 
 # --- Load Models into Memory ---
 print("Loading models into memory...")
-try:
-    with open('diabetes_model.pkl', 'rb') as f:
-        diabetes_model = pickle.load(f)
-    print("Diabetes model loaded.")
-
-    with open('heart_disease_model.pkl', 'rb') as f:
-        heart_disease_model = pickle.load(f)
-    print("Heart disease model loaded.")
-
-    with open('cancer_model.pkl', 'rb') as f:
-        cancer_model = pickle.load(f)
-    print("Cancer model loaded.")
-except FileNotFoundError as e:
-    print(f"!!! Error loading models after training: {e}.")
-    exit(1)
+with open('diabetes_model.pkl', 'rb') as f:
+    diabetes_model = pickle.load(f)
+with open('heart_disease_model.pkl', 'rb') as f:
+    heart_disease_model = pickle.load(f)
+with open('cancer_model.pkl', 'rb') as f:
+    cancer_model = pickle.load(f)
 print("All models loaded successfully.")
 
 
-# --- Prediction Endpoint ---
-@app.route('/predict', methods=['POST'])
-def predict():
+# --- Authentication Endpoints ---
+@app.route('/signup', methods=['POST'])
+def signup():
     data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    if not email or not password:
+        return jsonify({"error": "Email and password are required"}), 400
+    if User.query.filter_by(email=email).first():
+        return jsonify({"error": "Email already exists"}), 409
+    new_user = User(email=email, password=password)
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"message": "User created successfully"}), 201
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    user = User.query.filter_by(email=email).first()
+    if user and user.check_password(password):
+        access_token = create_access_token(identity={'email': user.email, 'id': user.id})
+        return jsonify(access_token=access_token)
+    else:
+        return jsonify({"error": "Invalid credentials"}), 401
+
+
+# --- Protected Prediction Endpoint ---
+@app.route('/predict', methods=['POST'])
+@jwt_required()
+def predict():
+    current_user = get_jwt_identity()
+    print(f"Prediction request from user: {current_user['email']}")
+    data = request.get_json()
+    
     # --- 1. Diabetes Prediction ---
     diabetes_features = pd.DataFrame({
         'Pregnancies': [0], 'Glucose': [float(data.get('glucose', 0))], 'BloodPressure': [float(data.get('bloodPressure', 0))],
@@ -107,9 +137,6 @@ def predict():
     heart_disease_risk = heart_disease_risk_proba * 100
 
     # --- 3. Cancer Prediction (Using Real Model) ---
-    # NOTE: The UI form does not collect the 30 specific features needed for this model.
-    # We are using a set of average, default values for a baseline prediction.
-    # A future improvement would be to create a more detailed form to collect this data.
     cancer_features_dict = {
         'radius_mean': 14.1, 'texture_mean': 19.2, 'perimeter_mean': 91.9, 'area_mean': 654.8,
         'smoothness_mean': 0.096, 'compactness_mean': 0.104, 'concavity_mean': 0.088,
@@ -124,12 +151,19 @@ def predict():
     cancer_features = pd.DataFrame([cancer_features_dict])
     expected_cancer_cols = cancer_model.feature_names_in_
     cancer_features = cancer_features.reindex(columns=expected_cancer_cols, fill_value=0)
-
     cancer_risk_proba = cancer_model.predict_proba(cancer_features)[0][1]
     cancer_risk = cancer_risk_proba * 100
 
     return jsonify({
-        'diabetes': { 'risk': diabetes_risk }, 'heartDisease': { 'risk': heart_disease_risk }, 'cancer': { 'risk': cancer_risk }
+        'diabetes': { 'risk': diabetes_risk },
+        'heartDisease': { 'risk': heart_disease_risk },
+        'cancer': { 'risk': cancer_risk }
     })
 
-print("--- Server setup complete. Ready for requests. ---")
+# --- Root Endpoint ---
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify({
+        "status": "ok",
+        "message": "Chronic Disease Predictor API is running successfully."
+    })
